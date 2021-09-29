@@ -1,0 +1,110 @@
+# This file was generated based on "Jmix model". Do not edit manually.
+
+schema {
+    query: Query
+    mutation: Mutation
+}
+
+type AuthorDto {
+    firstName: String
+    id: Long
+    lastName: String
+}
+
+type BookDto {
+    genre: GenreDto
+    id: Long
+    name: String
+}
+
+type GenreDto {
+    id: Long
+    name: String
+}
+
+"Mutation root"
+type Mutation {
+    delete_Author(id: Long!): Boolean!
+    delete_Book(id: Long!): Boolean!
+    delete_Genre(id: Long!): Boolean!
+    save_Author(input: AuthorDtoInput): AuthorDto
+    save_Book(input: BookDtoInput): BookDto
+    update_Genre(input: GenreDtoInput): GenreDto
+}
+
+"Query root"
+type Query {
+    allGenres: [GenreDto]
+    byAuthor_Book(authorId: Long!): [BookDto]
+    findAll_Book: [BookDto]
+    findByBook_Author(bookId: Long!): [AuthorDto]
+    findById_Book(id: Long!): BookDto
+    findByNames_Author(name: String!): [AuthorDto]
+    list_Author: [AuthorDto]
+    loadById_Author(id: Long!): AuthorDto
+}
+
+"BigDecimal"
+scalar BigDecimal
+
+"BigInteger"
+scalar BigInteger
+
+"Byte"
+scalar Byte
+
+"Char"
+scalar Char
+
+"Date"
+scalar Date
+
+"DateTime"
+scalar DateTime
+
+"LocalDate"
+scalar LocalDate
+
+"LocalDateTime"
+scalar LocalDateTime
+
+"LocalTime"
+scalar LocalTime
+
+"Long"
+scalar Long
+
+"OffsetDateTime"
+scalar OffsetDateTime
+
+"OffsetTime"
+scalar OffsetTime
+
+"Short"
+scalar Short
+
+"Time"
+scalar Time
+
+"UUID"
+scalar UUID
+
+"Void"
+scalar Void
+
+input AuthorDtoInput {
+    firstName: String
+    id: Long
+    lastName: String
+}
+
+input BookDtoInput {
+    genre: GenreDtoInput
+    id: Long
+    name: String
+}
+
+input GenreDtoInput {
+    id: Long
+    name: String
+}
