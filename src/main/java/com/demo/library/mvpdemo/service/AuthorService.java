@@ -1,6 +1,7 @@
 package com.demo.library.mvpdemo.service;
 
 import com.demo.library.mvpdemo.dto.AuthorDto;
+import com.demo.library.mvpdemo.dto.AuthorFilterDto;
 import com.demo.library.mvpdemo.entity.Author;
 import com.demo.library.mvpdemo.repository.AuthorRepository;
 import io.leangen.graphql.annotations.GraphQLMutation;
@@ -10,6 +11,7 @@ import io.leangen.graphql.spqr.spring.annotations.GraphQLApi;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.ObjectUtils;
 
 import java.util.List;
 import java.util.stream.Collectors;
@@ -36,20 +38,14 @@ public class AuthorService {
 
     @GraphQLQuery(name = "list_Author")
     @Transactional(readOnly = true)
-    public List<AuthorDto> findAll() {
-        return crudRepository.findAll().stream()
-                .map(e -> mapper.map(e, AuthorDto.class))
-                .collect(Collectors.toList());
-    }
-
-    @GraphQLQuery(name = "findByNames_Author")
-    @Transactional(readOnly = true)
-    public List<AuthorDto> findByNames(@GraphQLNonNull String name) {
-        if (name == null || name.isEmpty()) {
-            return findAll();
+    public List<AuthorDto> findAll(@GraphQLNonNull AuthorFilterDto filter) {
+        List<Author> authors;
+        if (ObjectUtils.isEmpty(filter.getName())) {
+            authors = crudRepository.findAll();
+        } else {
+            authors = crudRepository.findByFirstNameOrLastName(filter.getName(), filter.getName());
         }
 
-        List<Author> authors = crudRepository.findByFirstNameContainsIgnoreCaseOrLastNameContainsIgnoreCase(name, name);
         return authors.stream()
                 .map(e -> mapper.map(e, AuthorDto.class))
                 .collect(Collectors.toList());

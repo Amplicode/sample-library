@@ -13,11 +13,11 @@ import {
   EditOutlined,
   PlusOutlined
 } from "@ant-design/icons";
-import { Button, Card, Modal, Spin, Empty, Result } from "antd";
+import {Button, Card, Modal, Spin, Empty, Result, Row, Col, Input} from "antd";
 import { FormattedMessage, IntlShape, useIntl } from "react-intl";
 import { MutationFunctionOptions } from "@apollo/client/react/types/types";
 import { FetchResult } from "@apollo/client/link/core";
-import { useCallback, useEffect } from "react";
+import {useCallback, useEffect, useState} from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   EntityListScreenProps,
@@ -32,8 +32,8 @@ import AuthorDetails from "./AuthorDetails";
 const ROUTE = "author-list";
 
 const LIST__AUTHOR = gql`
-  query list_Author {
-    list_Author {
+  query list_Author($name: String) {
+    list_Author(filter: {name: $name}) {
       firstName
       id
       lastName
@@ -52,8 +52,12 @@ const AuthorList = observer(({ onSelect }: EntityListScreenProps) => {
   const intl = useIntl();
   const match = useRouteMatch<{ entityId: string }>(`/${ROUTE}/:entityId`);
   const history = useHistory();
+  const [nameFilterValue, setNameFilterValue] = useState("");
+  const [nameToSearchBy, setNameToSearchBy] = useState("");
 
-  const { loading, error, data } = useQuery(LIST__AUTHOR);
+  const { loading, error, data } = useQuery(LIST__AUTHOR, {
+    variables: {"name": nameToSearchBy}
+  });
 
   const [executeDeleteMutation] = useMutation(DELETE__AUTHOR);
 
@@ -86,10 +90,6 @@ const AuthorList = observer(({ onSelect }: EntityListScreenProps) => {
     }
   }, [match, openEditor, screens]);
 
-  if (loading) {
-    return <Spin />;
-  }
-
   if (error) {
     return (
       <Result
@@ -101,32 +101,35 @@ const AuthorList = observer(({ onSelect }: EntityListScreenProps) => {
 
   const items = data?.["list_Author"];
 
-  if (items == null || items.length === 0) {
-    return (
-        <div className="narrow-layout">
-          {!isSelectMode && (
-              <div style={{ marginBottom: "12px" }}>
-                <Button
-                    htmlType="button"
-                    key="create"
-                    title='intl.formatMessage({id: "common.create"})'
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    onClick={() => openEditor()}
-                >
-                    <span>
-                      <FormattedMessage id="common.create" />
-                    </span>
-                </Button>
-              </div>
-          )}
-          <Empty/>
-        </div>
-    );
+  function onInputBlur(event: React.FocusEvent<HTMLInputElement>) {
+    setNameToSearchBy(event.currentTarget.value)
+  }
+
+  function onInputChange(event: React.ChangeEvent<HTMLInputElement>) {
+    setNameFilterValue(event.target.value);
+  }
+
+  function onInputPressEnter(event: React.KeyboardEvent<HTMLInputElement>) {
+    setNameToSearchBy(event.currentTarget.value)
   }
 
   return (
     <div className="narrow-layout">
+      <Row gutter={16} style={{marginBottom: 8}}>
+        <Col flex={"none"}>
+          <span style={{verticalAlign: "middle"}}>
+              <FormattedMessage id="author.filterByName"/>
+          </span>
+        </Col>
+        <Col flex={"auto"}>
+          <Input
+                 allowClear={true}
+                 value={nameFilterValue}
+                 onChange={onInputChange}
+                 onBlur={onInputBlur}
+                 onPressEnter={onInputPressEnter}/>
+        </Col>
+      </Row>
       {!isSelectMode && (
         <div style={{ marginBottom: "12px" }}>
           <Button
@@ -154,29 +157,37 @@ const AuthorList = observer(({ onSelect }: EntityListScreenProps) => {
             onClick={screens.closeActiveBreadcrumb}
           >
             <span>
-              <FormattedMessage id="common.close" />
+              <FormattedMessage id="common.close"/>
             </span>
           </Button>
         </div>
       )}
 
-      {items.map((e: any) => (
-        <Card
-          key={e["id"]}
-          title={guessDisplayName(e)}
-          style={{ marginBottom: "12px" }}
-          actions={getCardActions({
-            screens,
-            entityInstance: e,
-            onSelect,
-            executeDeleteMutation,
-            intl,
-            openEditor
-          })}
-        >
-          <Fields entity={e} />
-        </Card>
-      ))}
+      {
+        loading ? <Spin/> : <span/>
+      }
+
+      {items == null || items.length === 0
+          ? <Empty/>
+          :
+        items.map((e: any) => (
+            <Card
+                key={e["id"]}
+                title={guessDisplayName(e)}
+                style={{marginBottom: "12px"}}
+                actions={getCardActions({
+                  screens,
+                  entityInstance: e,
+                  onSelect,
+                  executeDeleteMutation,
+                  intl,
+                  openEditor
+                })}
+            >
+                <Fields entity={e}/>
+            </Card>
+        ))
+      }
     </div>
   );
 });

@@ -40,9 +40,8 @@ type Query {
     findAll_Book: [BookDto]
     findByBook_Author(bookId: Long!): [AuthorDto]
     findById_Book(id: Long!): BookDto
-    findByNames_Author(name: String!): [AuthorDto]
     findGenre(id: Long!): GenreDto
-    list_Author: [AuthorDto]
+    list_Author(filter: AuthorFilterDtoInput!): [AuthorDto]
     loadById_Author(id: Long!): AuthorDto
 }
 
@@ -98,6 +97,10 @@ input AuthorDtoInput {
     firstName: String
     id: Long
     lastName: String
+}
+
+input AuthorFilterDtoInput {
+    name: String
 }
 
 input BookDtoInput {
