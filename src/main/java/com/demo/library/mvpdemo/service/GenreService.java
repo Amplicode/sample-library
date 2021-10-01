@@ -18,19 +18,19 @@ import java.util.stream.Collectors;
 @GraphQLApi
 @Service
 public class GenreService {
-    private final GenreRepository genreRepository;
-    private final ModelMapper modelMapper;
+    private final GenreRepository crudRepository;
+    private final ModelMapper mapper;
 
-    public GenreService(GenreRepository genreRepository, ModelMapper modelMapper) {
-        this.genreRepository = genreRepository;
-        this.modelMapper = modelMapper;
+    public GenreService(GenreRepository crudRepository, ModelMapper mapper) {
+        this.crudRepository = crudRepository;
+        this.mapper = mapper;
     }
 
     @GraphQLQuery(name = "allGenres")
     @Transactional(readOnly = true)
     public List<GenreDto> findAll() {
-        return genreRepository.findAll().stream()
-                .map(e -> modelMapper.map(e, GenreDto.class))
+        return crudRepository.findAll().stream()
+                .map(e -> mapper.map(e, GenreDto.class))
                 .collect(Collectors.toList());
     }
 
@@ -38,23 +38,37 @@ public class GenreService {
     @Transactional
     public GenreDto update(GenreDto input) {
         if (input.getId() != null) {
-            if (!genreRepository.existsById(input.getId())) {
+            if (!crudRepository.existsById(input.getId())) {
                 throw ResourceNotFoundException.withId(input.getId());
             }
         }
 
         Genre entity = new Genre();
-        modelMapper.map(input, entity);
-        entity = genreRepository.save(entity);
+        mapper.map(input, entity);
+        entity = crudRepository.save(entity);
 
-        return modelMapper.map(entity, GenreDto.class);
+        return mapper.map(entity, GenreDto.class);
     }
 
     @GraphQLMutation(name = "delete_Genre")
     @Transactional
     public void delete(@GraphQLNonNull Long id) {
-        Genre entity = genreRepository.findById(id)
+        Genre entity = crudRepository.findById(id)
                 .orElseThrow(() -> ResourceNotFoundException.withId(id));
-        genreRepository.delete(entity);
+        crudRepository.delete(entity);
+    }
+
+    @GraphQLQuery(name = "countGenres")
+    @Transactional
+    public long count() {
+        return crudRepository.count();
+    }
+
+    @GraphQLQuery(name = "findGenre")
+    @Transactional
+    public GenreDto findById(@GraphQLNonNull Long id) {
+        return crudRepository.findById(id)
+                .map(e -> mapper.map(e, GenreDto.class))
+                .orElseThrow(() -> new RuntimeException(String.format("Unable to find entity by id: %s ", id)));
     }
 }

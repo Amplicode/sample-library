@@ -1,1 +1,3 @@
 rootProject.name = 'mvp-demo'
+
+include 'frontend'

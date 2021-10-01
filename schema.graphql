@@ -36,10 +36,12 @@ type Mutation {
 type Query {
     allGenres: [GenreDto]
     byAuthor_Book(authorId: Long!): [BookDto]
+    countGenres: Long!
     findAll_Book: [BookDto]
     findByBook_Author(bookId: Long!): [AuthorDto]
     findById_Book(id: Long!): BookDto
     findByNames_Author(name: String!): [AuthorDto]
+    findGenre(id: Long!): GenreDto
     list_Author: [AuthorDto]
     loadById_Author(id: Long!): AuthorDto
 }

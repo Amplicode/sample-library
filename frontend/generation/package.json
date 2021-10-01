@@ -1,0 +1,6 @@
+{
+  "name": "mvp-demo-generation",
+  "devDependencies": {
+    "@amplicode/codegen": "^0.1.0"
+  }
+}
