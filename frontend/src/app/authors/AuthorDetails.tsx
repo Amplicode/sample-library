@@ -137,7 +137,7 @@ const AuthorDetails = observer(({ id }: EntityDetailsScreenProps) => {
           label="First Name"
           style={{ marginBottom: "12px" }}
         >
-          <Input />
+          <Input autoFocus/>
         </Form.Item>
 
         <Form.Item

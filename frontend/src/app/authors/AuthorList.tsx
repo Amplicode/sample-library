@@ -17,7 +17,7 @@ import {Button, Card, Modal, Spin, Empty, Result, Row, Col, Input} from "antd";
 import { FormattedMessage, IntlShape, useIntl } from "react-intl";
 import { MutationFunctionOptions } from "@apollo/client/react/types/types";
 import { FetchResult } from "@apollo/client/link/core";
-import {useCallback, useEffect, useState} from "react";
+import React, {useCallback, useEffect, useState} from "react";
 import { useHistory, useRouteMatch } from "react-router-dom";
 import {
   EntityListScreenProps,
@@ -123,6 +123,7 @@ const AuthorList = observer(({ onSelect }: EntityListScreenProps) => {
         </Col>
         <Col flex={"auto"}>
           <Input
+                 autoFocus={true}
                  allowClear={true}
                  value={nameFilterValue}
                  onChange={onInputChange}

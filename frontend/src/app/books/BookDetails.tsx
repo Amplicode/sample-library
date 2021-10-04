@@ -145,6 +145,10 @@ const BookDetails = observer(({ id }: EntityDetailsScreenProps) => {
         layout="vertical"
         form={form}
       >
+        <Form.Item name="name" label="Name" style={{ marginBottom: "12px" }}>
+          <Input autoFocus/>
+        </Form.Item>
+
         <Form.Item name="genre" label="Genre" style={{ marginBottom: "12px" }}>
           <EntityLookupField
             getDisplayName={(value: Record<string, unknown>) =>
@@ -153,10 +157,6 @@ const BookDetails = observer(({ id }: EntityDetailsScreenProps) => {
             label="Genre"
             listComponent={GenreList}
           />
-        </Form.Item>
-
-        <Form.Item name="name" label="Name" style={{ marginBottom: "12px" }}>
-          <Input />
         </Form.Item>
 
         {formError && (

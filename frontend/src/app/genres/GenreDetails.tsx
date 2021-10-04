@@ -131,7 +131,7 @@ const GenreDetails = observer(({ id }: EntityDetailsScreenProps) => {
         form={form}
       >
         <Form.Item name="name" label="Name" style={{ marginBottom: "12px" }}>
-          <Input />
+          <Input autoFocus/>
         </Form.Item>
 
         {formError && (
