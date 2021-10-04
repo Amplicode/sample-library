@@ -5,9 +5,9 @@ import {
   useMutation,
   FetchResult,
   ApolloError,
-  ApolloCache
+  ApolloCache, useQuery
 } from "@apollo/client";
-import { Form, Button, Card, message, Alert, Spin, Result, Input } from "antd";
+import {Form, Button, Card, message, Alert, Spin, Result, Input, Select} from "antd";
 import { useForm } from "antd/es/form/Form";
 import { observer } from "mobx-react";
 import { FormattedMessage, useIntl } from "react-intl";
@@ -20,6 +20,8 @@ import {
 import { EntityLookupField } from "@amplicode/react-antd";
 import BookList from "./BookList";
 import GenreList from "../genres/GenreList";
+
+const { Option } = Select;
 
 const FIND_BY_ID__BOOK = gql`
   query findById_Book($id: Long!) {
@@ -47,6 +49,15 @@ const SAVE__BOOK = gql`
   }
 `;
 
+const ALL_GENRES = gql`
+  query allGenres {
+    allGenres {
+      id
+      name
+    }
+  }
+`;
+
 const BookDetails = observer(({ id }: EntityDetailsScreenProps) => {
   const [form] = useForm();
   const intl = useIntl();
@@ -61,6 +72,8 @@ const BookDetails = observer(({ id }: EntityDetailsScreenProps) => {
       id
     }
   });
+
+  const {loading: genresLoading, error: genresError, data: genresData} = useQuery(ALL_GENRES);
 
   const [executeUpsertMutation, { loading: upsertInProcess }] = useMutation(
     SAVE__BOOK
@@ -137,6 +150,8 @@ const BookDetails = observer(({ id }: EntityDetailsScreenProps) => {
     );
   }
 
+  const genreItems = (genresLoading || genresError) ? [] : genresData?.["allGenres"];
+
   return (
     <Card className="narrow-layout">
       <Form
@@ -150,13 +165,13 @@ const BookDetails = observer(({ id }: EntityDetailsScreenProps) => {
         </Form.Item>
 
         <Form.Item name="genre" label="Genre" style={{ marginBottom: "12px" }}>
-          <EntityLookupField
-            getDisplayName={(value: Record<string, unknown>) =>
-              guessDisplayName(value)
-            }
-            label="Genre"
-            listComponent={GenreList}
-          />
+          <Select>
+            {genreItems.map((genre: any) => (
+                <Option key={genre["id"]} value={genre["id"]}>
+                  {genre["name"]}
+                </Option>
+            ))}
+          </Select>
         </Form.Item>
 
         {formError && (
@@ -186,14 +201,19 @@ const BookDetails = observer(({ id }: EntityDetailsScreenProps) => {
 });
 
 function formValuesToData(values: any, id?: string): any {
-  return {
+  let map = {
     ...values,
     id
   };
+  map["genre"] = {"id": map["genre"]};
+  return map;
 }
 
 function dataToFormValues(data: any): any {
-  return data;
+  let map = { ...data };
+  let genreObj = map["genre"];
+  map["genre"] = genreObj ? genreObj["id"] : null;
+  return map;
 }
 
 function getUpdateFn(values: any) {
