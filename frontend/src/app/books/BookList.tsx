@@ -39,6 +39,10 @@ const FIND_ALL__BOOK = gql`
       }
       id
       name
+      authors {
+        firstName
+        lastName
+      }
     }
   }
 `;
@@ -197,6 +201,13 @@ const Fields = ({ entity }: { entity: any }) => (
 );
 
 function renderFieldValue(entity: any, property: string): string {
+  if (property === "authors") {
+    let authors = entity[property] as any[];
+    return authors
+        .map(author => author["firstName"] + " " + author["lastName"])
+        .reduce((a, b) => a + (a.length == 0 ? "" : ", ") + b, "")
+  }
+
   return typeof entity[property] === "object"
     ? guessDisplayName(entity[property])
     : String(entity[property]);

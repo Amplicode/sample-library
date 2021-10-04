@@ -11,6 +11,13 @@ type AuthorDto {
     lastName: String
 }
 
+type BookDetailsDto {
+    authors: [AuthorDto]
+    genre: GenreDto
+    id: Long
+    name: String
+}
+
 type BookDto {
     genre: GenreDto
     id: Long
@@ -28,7 +35,7 @@ type Mutation {
     delete_Book(id: Long!): Boolean!
     delete_Genre(id: Long!): Boolean!
     save_Author(input: AuthorDtoInput): AuthorDto
-    save_Book(input: BookDtoInput): BookDto
+    save_Book(input: BookDetailsDtoInput): BookDetailsDto
     update_Genre(input: GenreDtoInput): GenreDto
 }
 
@@ -37,9 +44,9 @@ type Query {
     allGenres: [GenreDto]
     byAuthor_Book(authorId: Long!): [BookDto]
     countGenres: Long!
-    findAll_Book: [BookDto]
+    findAll_Book: [BookDetailsDto]
     findByBook_Author(bookId: Long!): [AuthorDto]
-    findById_Book(id: Long!): BookDto
+    findById_Book(id: Long!): BookDetailsDto
     findGenre(id: Long!): GenreDto
     list_Author(filter: AuthorFilterDtoInput!): [AuthorDto]
     loadById_Author(id: Long!): AuthorDto
@@ -103,7 +110,8 @@ input AuthorFilterDtoInput {
     name: String
 }
 
-input BookDtoInput {
+input BookDetailsDtoInput {
+    authors: [AuthorDtoInput]
     genre: GenreDtoInput
     id: Long
     name: String

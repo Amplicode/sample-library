@@ -1,5 +1,6 @@
 package com.demo.library.mvpdemo.service;
 
+import com.demo.library.mvpdemo.dto.BookDetailsDto;
 import com.demo.library.mvpdemo.dto.BookDto;
 import com.demo.library.mvpdemo.entity.Book;
 import com.demo.library.mvpdemo.repository.BookRepository;
@@ -36,9 +37,9 @@ public class BookService {
 
     @GraphQLQuery(name = "findAll_Book")
     @Transactional(readOnly = true)
-    public List<BookDto> findAll() {
+    public List<BookDetailsDto> findAll() {
         return crudRepository.findAll().stream()
-                .map(e -> mapper.map(e, BookDto.class))
+                .map(e -> mapper.map(e, BookDetailsDto.class))
                 .collect(Collectors.toList());
     }
 
@@ -52,15 +53,15 @@ public class BookService {
 
     @GraphQLQuery(name = "findById_Book")
     @Transactional(readOnly = true)
-    public BookDto findById(@GraphQLNonNull Long id) {
+    public BookDetailsDto findById(@GraphQLNonNull Long id) {
         return crudRepository.findById(id)
-                .map(e -> mapper.map(e, BookDto.class))
+                .map(e -> mapper.map(e, BookDetailsDto.class))
                 .orElseThrow(() -> new RuntimeException(String.format("Unable to find entity by id: %s ", id)));
     }
 
     @GraphQLMutation(name = "save_Book")
     @Transactional
-    public BookDto update(BookDto input) {
+    public BookDetailsDto update(BookDetailsDto input) {
         if (input.getId() != null) {
             if (!crudRepository.existsById(input.getId())) {
                 throw new RuntimeException(
@@ -71,6 +72,6 @@ public class BookService {
         mapper.map(input, entity);
         entity = crudRepository.save(entity);
 
-        return mapper.map(entity, BookDto.class);
+        return mapper.map(entity, BookDetailsDto.class);
     }
 }

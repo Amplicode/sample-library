@@ -30,6 +30,11 @@ const FIND_BY_ID__BOOK = gql`
         id
         name
       }
+      authors {
+        id
+        firstName
+        lastName
+      }
       id
       name
     }
@@ -37,11 +42,16 @@ const FIND_BY_ID__BOOK = gql`
 `;
 
 const SAVE__BOOK = gql`
-  mutation save_Book($input: BookDtoInput) {
+  mutation save_Book($input: BookDetailsDtoInput) {
     save_Book(input: $input) {
       genre {
         id
         name
+      }
+      authors {
+        id
+        firstName
+        lastName
       }
       id
       name
@@ -54,6 +64,16 @@ const ALL_GENRES = gql`
     allGenres {
       id
       name
+    }
+  }
+`;
+
+const LIST__AUTHOR = gql`
+  query list_Author {
+    list_Author(filter: {name: ""}) {
+      firstName
+      id
+      lastName
     }
   }
 `;
@@ -74,6 +94,7 @@ const BookDetails = observer(({ id }: EntityDetailsScreenProps) => {
   });
 
   const {loading: genresLoading, error: genresError, data: genresData} = useQuery(ALL_GENRES);
+  const {loading: authorsLoading, error: authorsError, data: authorsData} = useQuery(LIST__AUTHOR);
 
   const [executeUpsertMutation, { loading: upsertInProcess }] = useMutation(
     SAVE__BOOK
@@ -151,6 +172,7 @@ const BookDetails = observer(({ id }: EntityDetailsScreenProps) => {
   }
 
   const genreItems = (genresLoading || genresError) ? [] : genresData?.["allGenres"];
+  const authorItems = (authorsLoading || authorsError) ? [] : authorsData?.["list_Author"];
 
   return (
     <Card className="narrow-layout">
@@ -169,6 +191,16 @@ const BookDetails = observer(({ id }: EntityDetailsScreenProps) => {
             {genreItems.map((genre: any) => (
                 <Option key={genre["id"]} value={genre["id"]}>
                   {genre["name"]}
+                </Option>
+            ))}
+          </Select>
+        </Form.Item>
+
+        <Form.Item name="authors" label="Authors" style={{ marginBottom: "12px" }}>
+          <Select mode="multiple" allowClear>
+            {authorItems.map((author: any) => (
+                <Option key={author["id"]} value={author["id"]}>
+                  {author["firstName"] + " " + author["lastName"]}
                 </Option>
             ))}
           </Select>
@@ -205,14 +237,19 @@ function formValuesToData(values: any, id?: string): any {
     ...values,
     id
   };
-  map["genre"] = {"id": map["genre"]};
+  let formGenre = map["genre"] as number;
+  let formAuthor = map["authors"] as number[];
+  map["genre"] = {"id": formGenre};
+  map["authors"] = formAuthor.map(val => ({"id": val}));
   return map;
 }
 
 function dataToFormValues(data: any): any {
   let map = { ...data };
   let genreObj = map["genre"];
+  let authorsObj = map["authors"] as any[];
   map["genre"] = genreObj ? genreObj["id"] : null;
+  map["authors"] = authorsObj ? authorsObj.map(val => val["id"]) : [];
   return map;
 }
 
