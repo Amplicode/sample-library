@@ -1,33 +1,14 @@
-import { observer } from "mobx-react";
-import {
-  gql,
-  useQuery,
-  useMutation,
-  ApolloCache,
-  Reference
-} from "@apollo/client";
-import {
-  CheckOutlined,
-  CloseOutlined,
-  DeleteOutlined,
-  EditOutlined,
-  PlusOutlined
-} from "@ant-design/icons";
-import { Button, Card, Modal, Spin, Empty, Result } from "antd";
-import { FormattedMessage, IntlShape, useIntl } from "react-intl";
-import { MutationFunctionOptions } from "@apollo/client/react/types/types";
-import { FetchResult } from "@apollo/client/link/core";
-import { useCallback, useEffect } from "react";
-import { useHistory, useRouteMatch } from "react-router-dom";
-import {
-  EntityListScreenProps,
-  guessDisplayName,
-  guessLabel,
-  OpenInBreadcrumbParams,
-  Screens,
-  useScreens
-} from "@amplicode/react-core";
+import {observer} from "mobx-react";
+import {ApolloCache, gql, Reference, useMutation, useQuery} from "@apollo/client";
+import {CloseOutlined, DeleteOutlined, PlusOutlined} from "@ant-design/icons";
+import {Button, Empty, Modal, Result, Space, Spin, Table} from "antd";
+import {FormattedMessage, useIntl} from "react-intl";
+import * as React from "react";
+import {useCallback, useEffect, useState} from "react";
+import {useHistory, useRouteMatch} from "react-router-dom";
+import {EntityListScreenProps, OpenInBreadcrumbParams, Screens, useScreens} from "@amplicode/react-core";
 import BookDetails from "./BookDetails";
+import {TableRowSelection} from "antd/lib/table/interface";
 
 const ROUTE = "book-list";
 
@@ -62,6 +43,14 @@ const BookList = observer(({ onSelect }: EntityListScreenProps) => {
   const { loading, error, data } = useQuery(FIND_ALL__BOOK);
 
   const [executeDeleteMutation] = useMutation(DELETE__BOOK);
+
+  const [selectedRowKeys, setSelectedRowKeys] = useState<React.Key[]>([])
+
+  const tableRowSelection: TableRowSelection<any> = {
+    type: 'radio',
+    selectedRowKeys: selectedRowKeys,
+    onChange: (keys: React.Key[]) => setSelectedRowKeys(keys)
+  }
 
   // Entity list can work in select mode, which means that you can select an entity instance and it will be passed to onSelect callback.
   // This functionality is used in EntityLookupField.
@@ -107,6 +96,76 @@ const BookList = observer(({ onSelect }: EntityListScreenProps) => {
 
   const items = data?.["findAll_Book"];
 
+  function onRemoveClick() {
+    if (selectedRowKeys.length === 0) {
+      return;
+    }
+
+    Modal.confirm({
+      content: intl.formatMessage({
+        id: "EntityListScreen.deleteConfirmation"
+      }),
+      okText: intl.formatMessage({id: "common.ok"}),
+      cancelText: intl.formatMessage({id: "common.cancel"}),
+      onOk: () => {
+        let entityId = selectedRowKeys[0]
+        let entityInstance = items.find((item: any) => item["id"] === entityId)
+        executeDeleteMutation({
+          variables: {
+            id: entityId
+          },
+          update: getUpdateFn(entityInstance)
+        });
+      }
+    });
+  }
+
+  function getNameColumnValue(value: any, record: any): React.ReactNode {
+    return <>
+      <Button type={"link"}
+              title={intl.formatMessage({ id: "common.edit" })}
+              onClick={() => openEditor(record["id"])}
+      >
+        {value}
+      </Button>
+    </>
+  }
+
+  function getAuthorsColumnValue(value: any): React.ReactNode {
+    let authors = value as any[];
+    let authorsStr = "n/a";
+    if (authors) {
+      authorsStr = authors
+          .map(author => author["firstName"] + " " + author["lastName"])
+          .reduce((a, b) => a + (a.length === 0 ? "" : ", ") + b, "");
+    }
+    return <>
+      { authorsStr }
+    </>
+  }
+
+  const tableColumns = [
+    {
+      title : "Name",
+      dataIndex: "name",
+      key: "name",
+      render: getNameColumnValue,
+      sorter: (a: any, b: any) => a["name"].localeCompare(b["name"])
+    },
+    {
+      title : "Genre",
+      dataIndex: ["genre", "name"],
+      key: "genre",
+      sorter: (a: any, b: any) => a["genre"]["name"].localeCompare(b["genre"]["name"])
+    },
+    {
+      title : "Authors",
+      dataIndex: "authors",
+      key: "authors",
+      render: getAuthorsColumnValue
+    }
+  ]
+
   if (items == null || items.length === 0) {
     return (
         <div className="narrow-layout">
@@ -135,20 +194,35 @@ const BookList = observer(({ onSelect }: EntityListScreenProps) => {
   return (
     <div className="narrow-layout">
       {!isSelectMode && (
-        <div style={{ marginBottom: "12px" }}>
-          <Button
-            htmlType="button"
-            key="create"
-            title='intl.formatMessage({id: "common.create"})'
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={() => openEditor()}
-          >
-            <span>
-              <FormattedMessage id="common.create" />
-            </span>
-          </Button>
-        </div>
+          <div style={{marginBottom: "12px"}}>
+            <Space>
+              <Button
+                  htmlType="button"
+                  key="create"
+                  title='intl.formatMessage({id: "common.create"})'
+                  type="primary"
+                  icon={<PlusOutlined/>}
+                  onClick={() => openEditor()}
+              >
+                <span>
+                  <FormattedMessage id="common.create"/>
+                </span>
+              </Button>
+              <Button
+                  htmlType="button"
+                  key="delete"
+                  title='intl.formatMessage({id: "common.remove"})'
+                  type="primary"
+                  icon={<DeleteOutlined/>}
+                  disabled={tableRowSelection.selectedRowKeys?.length === 0}
+                  onClick={() => onRemoveClick()}
+              >
+                <span>
+                  <FormattedMessage id="common.remove"/>
+                </span>
+              </Button>
+              </Space>
+          </div>
       )}
       {isSelectMode && (
         <div style={{ marginBottom: "12px" }}>
@@ -167,123 +241,15 @@ const BookList = observer(({ onSelect }: EntityListScreenProps) => {
         </div>
       )}
 
-      {items.map((e: any) => (
-        <Card
-          key={e["id"]}
-          title={e["name"]}
-          style={{ marginBottom: "12px" }}
-          actions={getCardActions({
-            screens,
-            entityInstance: e,
-            onSelect,
-            executeDeleteMutation,
-            intl,
-            openEditor
-          })}
-        >
-          <Fields entity={e} />
-        </Card>
-      ))}
+      <Table columns={tableColumns}
+             dataSource={items}
+             pagination={false}
+             rowSelection={tableRowSelection}
+             rowKey="id"
+      />
     </div>
   );
 });
-
-const Fields = ({ entity }: { entity: any }) => (
-  <>
-    {Object.keys(entity)
-      .filter(p => p !== "id" && entity[p] != null)
-      .map(p => (
-        <div key={p}>
-          <strong>{guessLabel(p)}:</strong> {renderFieldValue(entity, p)}
-        </div>
-      ))}
-  </>
-);
-
-function renderFieldValue(entity: any, property: string): string {
-  if (property === "authors") {
-    let authors = entity[property] as any[];
-    return authors
-        .map(author => author["firstName"] + " " + author["lastName"])
-        .reduce((a, b) => a + (a.length === 0 ? "" : ", ") + b, "")
-  }
-
-  return typeof entity[property] === "object"
-    ? guessDisplayName(entity[property])
-    : String(entity[property]);
-}
-
-interface CardActionsInput {
-  screens: Screens;
-  entityInstance: any;
-  onSelect?: (entityInstance: this["entityInstance"]) => void;
-  executeDeleteMutation: (
-    options?: MutationFunctionOptions
-  ) => Promise<FetchResult>;
-  intl: IntlShape;
-  openEditor: (id?: string) => void;
-}
-
-function getCardActions(input: CardActionsInput) {
-  const {
-    screens,
-    entityInstance,
-    onSelect,
-    executeDeleteMutation,
-    intl,
-    openEditor
-  } = input;
-
-  if (onSelect == null) {
-    return [
-      <DeleteOutlined
-        key="delete"
-        title={intl.formatMessage({ id: "common.remove" })}
-        onClick={() => {
-          Modal.confirm({
-            content: intl.formatMessage({
-              id: "EntityListScreen.deleteConfirmation"
-            }),
-            okText: intl.formatMessage({ id: "common.ok" }),
-            cancelText: intl.formatMessage({ id: "common.cancel" }),
-            onOk: () => {
-              executeDeleteMutation({
-                variables: {
-                  id: entityInstance.id
-                },
-                update: getUpdateFn(entityInstance)
-              });
-            }
-          });
-        }}
-      />,
-      <EditOutlined
-        key="edit"
-        title={intl.formatMessage({ id: "common.edit" })}
-        onClick={() => {
-          openEditor(entityInstance.id);
-        }}
-      />
-    ];
-  }
-
-  if (onSelect != null) {
-    return [
-      <CheckOutlined
-        key="select"
-        title={intl.formatMessage({
-          id: "EntityLookupField.selectEntityInstance"
-        })}
-        onClick={() => {
-          if (onSelect != null) {
-            onSelect(entityInstance);
-            screens.closeActiveBreadcrumb();
-          }
-        }}
-      />
-    ];
-  }
-}
 
 function getUpdateFn(e: any) {
   return (cache: ApolloCache<any>) => {
