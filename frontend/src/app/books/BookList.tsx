@@ -170,7 +170,7 @@ const BookList = observer(({ onSelect }: EntityListScreenProps) => {
       {items.map((e: any) => (
         <Card
           key={e["id"]}
-          title={guessDisplayName(e)}
+          title={e["name"]}
           style={{ marginBottom: "12px" }}
           actions={getCardActions({
             screens,
@@ -205,7 +205,7 @@ function renderFieldValue(entity: any, property: string): string {
     let authors = entity[property] as any[];
     return authors
         .map(author => author["firstName"] + " " + author["lastName"])
-        .reduce((a, b) => a + (a.length == 0 ? "" : ", ") + b, "")
+        .reduce((a, b) => a + (a.length === 0 ? "" : ", ") + b, "")
   }
 
   return typeof entity[property] === "object"

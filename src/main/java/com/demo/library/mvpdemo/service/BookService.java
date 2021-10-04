@@ -12,6 +12,8 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -39,8 +41,18 @@ public class BookService {
     @Transactional(readOnly = true)
     public List<BookDetailsDto> findAll() {
         return crudRepository.findAll().stream()
-                .map(e -> mapper.map(e, BookDetailsDto.class))
+                .map(e -> {
+                    BookDetailsDto dto = mapper.map(e, BookDetailsDto.class);
+                    sortBookAuthors(dto);
+                    return dto;
+                })
                 .collect(Collectors.toList());
+    }
+
+    private void sortBookAuthors(BookDetailsDto dto) {
+        if (dto.getAuthors() != null && dto.getAuthors().size() > 1) {
+            dto.getAuthors().sort(Comparator.comparing(a -> a.getFirstName() + a.getLastName()));
+        }
     }
 
     @GraphQLQuery(name = "byAuthor_Book")

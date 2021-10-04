@@ -1,12 +1,13 @@
 package com.demo.library.mvpdemo.dto;
 
+import java.util.List;
 import java.util.Set;
 
 public class BookDetailsDto {
     private Long id;
     private String name;
     private GenreDto genre;
-    private Set<AuthorDto> authors;
+    private List<AuthorDto> authors;
 
     public Long getId() {
         return id;
@@ -32,11 +33,11 @@ public class BookDetailsDto {
         this.genre = genre;
     }
 
-    public Set<AuthorDto> getAuthors() {
+    public List<AuthorDto> getAuthors() {
         return authors;
     }
 
-    public void setAuthors(Set<AuthorDto> authors) {
+    public void setAuthors(List<AuthorDto> authors) {
         this.authors = authors;
     }
 }
