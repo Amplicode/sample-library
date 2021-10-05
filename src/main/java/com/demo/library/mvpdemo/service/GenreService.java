@@ -9,11 +9,15 @@ import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.spqr.spring.annotations.GraphQLApi;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.demo.library.mvpdemo.service.Authorities.ADMIN;
+import static com.demo.library.mvpdemo.service.Authorities.USER;
 
 @GraphQLApi
 @Service
@@ -26,6 +30,7 @@ public class GenreService {
         this.mapper = mapper;
     }
 
+    @Secured({ADMIN, USER})
     @GraphQLQuery(name = "allGenres")
     @Transactional(readOnly = true)
     public List<GenreDto> findAll() {
@@ -34,6 +39,7 @@ public class GenreService {
                 .collect(Collectors.toList());
     }
 
+    @Secured({ADMIN})
     @GraphQLMutation(name = "update_Genre")
     @Transactional
     public GenreDto update(GenreDto input) {
@@ -50,6 +56,7 @@ public class GenreService {
         return mapper.map(entity, GenreDto.class);
     }
 
+    @Secured({ADMIN})
     @GraphQLMutation(name = "delete_Genre")
     @Transactional
     public void delete(@GraphQLNonNull Long id) {
@@ -58,12 +65,14 @@ public class GenreService {
         crudRepository.delete(entity);
     }
 
+    @Secured({ADMIN, USER})
     @GraphQLQuery(name = "countGenres")
     @Transactional
     public long count() {
         return crudRepository.count();
     }
 
+    @Secured({ADMIN, USER})
     @GraphQLQuery(name = "findGenre")
     @Transactional
     public GenreDto findById(@GraphQLNonNull Long id) {

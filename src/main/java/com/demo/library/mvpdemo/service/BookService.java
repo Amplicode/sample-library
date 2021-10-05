@@ -9,6 +9,7 @@ import io.leangen.graphql.annotations.GraphQLNonNull;
 import io.leangen.graphql.annotations.GraphQLQuery;
 import io.leangen.graphql.spqr.spring.annotations.GraphQLApi;
 import org.modelmapper.ModelMapper;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -16,6 +17,9 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import static com.demo.library.mvpdemo.service.Authorities.ADMIN;
+import static com.demo.library.mvpdemo.service.Authorities.USER;
 
 @GraphQLApi
 @Service
@@ -28,6 +32,7 @@ public class BookService {
         this.mapper = mapper;
     }
 
+    @Secured({ADMIN})
     @GraphQLMutation(name = "delete_Book")
     @Transactional
     public void delete(@GraphQLNonNull Long id) {
@@ -37,6 +42,7 @@ public class BookService {
         crudRepository.delete(entity);
     }
 
+    @Secured({ADMIN, USER})
     @GraphQLQuery(name = "findAll_Book")
     @Transactional(readOnly = true)
     public List<BookDetailsDto> findAll() {
@@ -55,6 +61,7 @@ public class BookService {
         }
     }
 
+    @Secured({ADMIN, USER})
     @GraphQLQuery(name = "byAuthor_Book")
     @Transactional(readOnly = true)
     public List<BookDto> findByAuthor(@GraphQLNonNull Long authorId) {
@@ -63,6 +70,7 @@ public class BookService {
                 .collect(Collectors.toList());
     }
 
+    @Secured({ADMIN, USER})
     @GraphQLQuery(name = "findById_Book")
     @Transactional(readOnly = true)
     public BookDetailsDto findById(@GraphQLNonNull Long id) {
@@ -71,6 +79,7 @@ public class BookService {
                 .orElseThrow(() -> new RuntimeException(String.format("Unable to find entity by id: %s ", id)));
     }
 
+    @Secured({ADMIN})
     @GraphQLMutation(name = "save_Book")
     @Transactional
     public BookDetailsDto update(BookDetailsDto input) {
