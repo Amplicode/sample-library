@@ -185,7 +185,6 @@ const BookList = observer(({ onSelect }: EntityListScreenProps) => {
                 </Button>
               </div>
           )}
-          <h2>No Genres!</h2>
           <Empty/>
         </div>
     );
